@@ -1,0 +1,48 @@
+int factorial(int n) {
+  if (n < 2)
+    return 1;
+  else
+    return n * factorial(n - 1);
+}
+
+void printIntComparison(int a, int b) {
+  string lt = "<", eq = "=";
+  if (a < b) {
+    print(a, lt, b);
+  } else if (a == b) {
+    print(a, eq, b);
+  } else {
+    print(a, ">", b);
+  }
+}
+
+void printStringComparison(string a, string b) {
+  string lt = "<", eq = "=";
+  if (a < b) {
+    print(a, lt, b);
+  } else if (a == b) {
+    print(a, eq, b);
+  } else {
+    print(a, ">", b);
+  }
+}
+
+int main(string arg) {
+  for (int i in 1 to 3) {
+    for (int j in 3 downto 1)
+      print(i, j);
+    print();
+  }
+  printStringComparison("aaa", "bbb");
+  int a = 3, b = 5;
+  printIntComparison(a, b);
+  print(a + b > 0 && a - b > 0);
+  while (a > 0) {
+    print(a);
+    a--;
+  }
+  string s = "" + "aaa" + "bbb";
+  print(s);
+  print(stringToInt("123") == 123);
+  print(intToString(123) == "123");
+}
