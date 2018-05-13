@@ -8,12 +8,11 @@ import qualified Data.Map as Map
 import AbsXul
 import ParXul
 
-type FunEnv = Map Ident TopDef
-type VarEnv = Map Ident Int
-type Env = (FunEnv, VarEnv)
+type Env = Map Ident TopDef
 
+type VarEnv = Map Ident Int
 type Store = Map Int Expr
-type State = (Int, Store)
+type State = (VarEnv, Int, Store)
 
 type ProgMonad = RWST Env () State IO
 
@@ -25,32 +24,29 @@ interpret (Program topDefs) = print "Hello"
   --     ())
 
 emptyEnv :: Env
-emptyEnv = (Map.empty, Map.empty)
+emptyEnv = Map.empty
 
 emptyState :: State
-emptyState = (0, Map.empty)
+emptyState = (Map.empty, 0, Map.empty)
 
-initVariable :: (Arg, Expr) -> (Env, State) -> (Env, State)
-initVariable (Arg _ ident, expr) ((funEnv, varEnv), (newloc, store)) =
-  ((funEnv, Map.insert ident newloc varEnv),
-  (newloc + 1, Map.insert newloc expr store))
+initVariable :: (Arg, Expr) -> State -> State
+initVariable (Arg _ ident, expr) (varEnv, newloc, store) =
+  (Map.insert ident newloc varEnv, newloc + 1, Map.insert newloc expr store)
 
 execFun :: TopDef -> [Expr] -> ProgMonad Expr
 execFun (FnDef _ _ args block) exprArgs = do
   evalArgs <- forM exprArgs eval
   oldState <- get
-  let (funEnv, funState) = foldr initVariable (emptyEnv, emptyState) $ zip args evalArgs
-  put funState
+  put $ foldr initVariable emptyState $ zip args evalArgs
   return ELitTrue
 
 eval :: Expr -> ProgMonad Expr
 eval e = case e of
   EVar ident -> do
-    (_, varEnv) <- ask
-    (_, store) <- get
+    (varEnv, _, store) <- get
     return $ store ! (varEnv ! ident)
   EApp ident args -> do
-    (funEnv, _) <- ask
+    funEnv <- ask
     execFun (funEnv ! ident) args
   ELitInt _ -> return e
   ELitTrue -> return e
