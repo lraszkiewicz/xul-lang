@@ -1,3 +1,6 @@
+interpreter
+build/
+doc/
 dist
 dist-*
 cabal-dev
