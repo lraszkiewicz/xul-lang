@@ -13,6 +13,11 @@
 
 Proponowana ocena: 17 punktów, spełnione warunki z treści zadania
 
+# Zmiany: W poniższej specyfikacji nie doszło do żadnych istotnych zmian odkąd
+# została wysłana do oceny miesiąc temu. Został jedynie doprecyzowany sposób
+# przekazywania argumentów do programu.
+# Plik Xul.cf z gramatyką w ogóle nie został zmieniony.
+
 Język Xul to statycznie typowany język, który bazuje na Latte
 i pożycza z niego większość podstawowych cech.
 Gramatyka w formacie BNFC znajduje się w dołączonym pliku Xul.cf,
@@ -30,8 +35,12 @@ Argumenty do funkcji przekazywane są przez wartość.
 
 W programie musi znajdować się funkcja main zwracająca int, od której zaczyna
 się wykonanie programu. Funkcja ta może nie przyjmować żadnych argumentów
-lub przyjąć jeden argument typu string, który będzie przekazany do interpretera
-w na razie niesprecyzowany sposób.
+lub przyjąć jeden argument typu string.
+Argument do programu przekazujemy poprzez wywołanie interpretera z flagą
+`--arg=argument`. Przekazanie argumentu do programu, którego funkcja main nie
+przyjmuje argumentów, spowoduje jego zignorowanie. Nieprzekazanie argumentu
+do programu, którego funkcja main takiego argumentu oczekuje, spowoduje
+przekazanie do niego pustego stringa ("").
 
 Dostępne typy to: int, bool, void, string.
 

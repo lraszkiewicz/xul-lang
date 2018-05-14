@@ -3,9 +3,10 @@
 module Interpreter where
 
 import Control.Monad.RWS
-import Data.Maybe (isNothing)
+import Data.Maybe
 import Data.Bool
 import Data.Map (Map, (!))
+import Debug.Trace
 import qualified Data.Map as Map
 
 import AbsXul
@@ -25,22 +26,11 @@ type State = (VarEnv, Int, Store, Maybe Expr)
 
 type ProgMonad = RWST FunEnv () State IO
 
-interpret :: Program -> IO ()
-interpret (Program topDefs) = print "Hello"
-  -- void $ runRWST
-  --     ()
-  --     (foldr (\def@(FnDef _ ident _ _) -> Map.insert ident def) Map.empty)
-  --     ())
-
-emptyState :: State
-emptyState = (Map.empty, 0, Map.empty, Nothing)
-
-initVariable :: Item -> State -> State
-initVariable (Init ident expr) (varEnv, newloc, store, ret) =
-  (Map.insert ident newloc varEnv,
-   newloc + 1,
-   Map.insert newloc expr store,
-   ret)
+interpret :: Program -> String -> IO ()
+interpret (Program topDefs) arg = do
+  let funEnv = foldr
+        (\def@(FnDef _ ident _ _) -> Map.insert ident def) newFunEnv topDefs
+  void $ runRWST (execFun (funEnv ! Ident "main") [EString arg]) funEnv newState
 
 newFunEnv :: FunEnv
 newFunEnv = Map.fromList [
@@ -49,6 +39,16 @@ newFunEnv = Map.fromList [
     (Ident "stringToInt",
      FnDef Int (Ident "stringToInt") [Arg Str (Ident "s")] (Block []))
   ]
+
+newState :: State
+newState = (Map.empty, 0, Map.empty, Nothing)
+
+initVariable :: Item -> State -> State
+initVariable (Init ident expr) (varEnv, newloc, store, ret) =
+  (Map.insert ident newloc varEnv,
+   newloc + 1,
+   Map.insert newloc expr store,
+   ret)
 
 execFun :: TopDef -> [Expr] -> ProgMonad Expr
 execFun (FnDef _ (Ident "intToString") _ _) [exprArg] = do
@@ -59,20 +59,47 @@ execFun (FnDef _ (Ident "stringToInt") _ _) [exprArg] = do
   evalArg <- eval exprArg
   case evalArg of
     EString s -> return $ ELitInt $ read s
-execFun (FnDef _ _ args block) exprArgs = do
-  -- TODO
+execFun (FnDef funType (Ident funName) args block) exprArgs = do
   evalArgs <- forM exprArgs eval
-  oldState <- get
+  oldState@(varEnv, newloc, store, ret) <- get
   let inits = [Init ident expr | (Arg _ ident) <- args | expr <- evalArgs]
-  put $ foldr initVariable emptyState inits
-  return ELitTrue
+  put $ foldr initVariable newState inits
+  execStmt $ BStmt block
+  (_, _, _, funRet) <- get
+  put oldState
+  case funRet of
+    Just retVal -> return retVal
+    Nothing -> if funType == Void
+               then return ELitTrue
+               else error $ "Non-void function `" ++ funName ++
+                            "` did not return a value."
 
 valToString :: Expr -> String
 valToString val = case val of
   ELitInt n -> show n
-  ELitTrue -> "True"
-  ELitFalse -> "False"
+  ELitTrue -> "true"
+  ELitFalse -> "false"
   EString s -> s
+
+-- Assumes that the loop counter was added to varEnv earlier.
+execForLoop :: Stmt -> ProgMonad ()
+execForLoop (For t ident valStart ord exprEnd body) = do
+  ELitInt valCounter <- eval (EVar ident)
+  ELitInt valEnd <- eval exprEnd
+  let compOp = if ord == OrdUp then (<=) else (>=) :: Integer -> Integer -> Bool
+  when (compOp valCounter valEnd) $ do
+    execStmt body
+    execStmt $ (if ord == OrdUp then Incr else Decr) ident
+    execForLoop (For t ident valStart ord exprEnd body)
+
+-- In if/else statements and while loops, the body will be wrapped in a block
+-- statement if it already wasn't. This is to ensure that `if (...) int a = 1;`
+-- will have its own environment, like `if (...) {int a = 1;}` would.
+-- Not used for for loops since they create its own env anyway.
+wrapInBlock :: Stmt -> Stmt
+wrapInBlock stmt = case stmt of
+  BStmt _ -> stmt
+  _ -> BStmt $ Block [stmt]
 
 execStmt :: Stmt -> ProgMonad ()
 execStmt stmt = do
@@ -94,11 +121,11 @@ execStmt stmt = do
     Incr ident -> do
       let (ELitInt val) = store ! (varEnv ! ident)
       let newStore = Map.insert (varEnv ! ident) (ELitInt $ val + 1) store
-      put (varEnv, newloc, store, ret)
+      put (varEnv, newloc, newStore, ret)
     Decr ident -> do
       let (ELitInt val) = store ! (varEnv ! ident)
       let newStore = Map.insert (varEnv ! ident) (ELitInt $ val - 1) store
-      put (varEnv, newloc, store, ret)
+      put (varEnv, newloc, newStore, ret)
     Ret expr -> do
       val <- eval expr
       put (varEnv, newloc, store, Just val)
@@ -106,41 +133,41 @@ execStmt stmt = do
     VRet -> put (varEnv, newloc, store, Just ELitTrue)
     Cond expr body -> do
       val <- eval expr
-      when (val == ELitTrue) $ execStmt body
+      when (val == ELitTrue) $ execStmt $ wrapInBlock body
     CondElse expr bodyIf bodyElse -> do
       val <- eval expr
-      execStmt (if val == ELitTrue then bodyIf else bodyElse)
+      execStmt $ if val == ELitTrue
+                 then wrapInBlock bodyIf
+                 else wrapInBlock bodyElse
     loop@(While expr body) -> do
       val <- eval expr
       when (val == ELitTrue) $ do
-        execStmt body
+        execStmt $ wrapInBlock body
         execStmt loop
-    SExp _ -> return ()
+    SExp expr -> void $ eval expr
     Print exprs -> do
       vals <- forM exprs eval
       lift $ putStr $ unwords $ map valToString vals
       lift $ putStr "\n"
     For t ident exprStart ord exprEnd body -> do
       ELitInt valStart <- eval exprStart
-      ELitInt valEnd <- eval exprEnd
-      let compOp =
-            if ord == OrdUp then (<=) else (>=) :: Integer -> Integer -> Bool
-      let iterOp = if ord == OrdUp then (+) else (-)
-      when (compOp valStart valEnd) $ do
-        execStmt body
-        execStmt $ For t ident (ELitInt $ iterOp valStart 1) ord exprEnd body
+      let loopEnv = initVariable (Init ident (ELitInt valStart)) oldState
+      put loopEnv
+      execForLoop $ For t ident (ELitInt valStart) ord exprEnd body
+      (_, newNewloc, newStore, newRet) <- get
+      put (varEnv, newNewloc, newStore, newRet)
 
 eval :: Expr -> ProgMonad Expr
 eval e = case e of
   EVar ident -> do
     (varEnv, _, store, _) <- get
     return $ store ! (varEnv ! ident)
-  EApp ident args -> do
-    funEnv <- ask
-    execFun (funEnv ! ident) args
   ELitInt _ -> return e
   ELitTrue -> return e
   ELitFalse -> return e
+  EApp ident args -> do
+    funEnv <- ask
+    execFun (funEnv ! ident) args
   EString _ -> return e
   Neg e1 -> do
     ELitInt n <- eval e1

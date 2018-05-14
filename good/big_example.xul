@@ -1,3 +1,5 @@
+// This program covers most of the language's features.
+
 int factorial(int n) {
   if (n < 2)
     return 1;
@@ -28,6 +30,7 @@ void printStringComparison(string a, string b) {
 }
 
 int main(string arg) {
+  print(arg);
   for (int i in 1 to 3) {
     for (int j in 3 downto 1)
       print(i, j);
@@ -45,4 +48,5 @@ int main(string arg) {
   print(s);
   print(stringToInt("123") == 123);
   print(intToString(123) == "123");
+  return 0;
 }

@@ -1,6 +1,6 @@
 SHELL=/usr/bin/env bash
 
-.PHONY: all parser doc
+.PHONY: all parser doc run
 
 all: parser doc interpreter
 
@@ -22,6 +22,9 @@ doc: doc/DocXul.html
 interpreter: parser src/Main.hs src/Interpreter.hs
 	cabal build; \
 	cp dist/build/xul-lang/xul-lang interpreter
+
+run: interpreter
+	./interpreter ./good/example.xul +RTS -xc
 
 # example: all
 #   ./build/TestXul example.xul;
