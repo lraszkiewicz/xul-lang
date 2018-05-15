@@ -1,0 +1,16 @@
+int main() {
+  int a = 5;
+  while (a > 0) {
+    a--;
+    print(a);
+  }
+  print();
+  for (int a in 5 to 10) {
+    print(a);
+  }
+  print();
+  for (int a in 10 downto 5) {
+    print(a);
+  }
+  return 0;
+}

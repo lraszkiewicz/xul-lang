@@ -1,0 +1,6 @@
+int main() {
+  print(1, "a", true);
+  print();
+  print("b");
+  return 0;
+}

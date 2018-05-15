@@ -1,6 +1,9 @@
 SHELL=/usr/bin/env bash
 
-.PHONY: all parser doc run
+GRAMMAR_FILES=src/Xul.cf build/AbsXul.hs build/LexXul.hs build/ErrM.hs \
+	build/ParXul.hs build/PrintXul.hs build/SkelXul.hs build/TestXul.hs
+
+.PHONY: all parser doc run_good
 
 all: parser doc interpreter
 
@@ -10,8 +13,7 @@ build/%.hs: src/Xul.cf
 	bnfc -m -haskell ../src/Xul.cf; \
 	make
 
-parser: src/Xul.cf build/AbsXul.hs build/LexXul.hs build/ErrM.hs \
-	build/ParXul.hs build/PrintXul.hs build/SkelXul.hs build/TestXul.hs
+parser: $(GRAMMAR_FILES)
 
 doc/DocXul.html: build/DocXul.txt
 	mkdir -p doc; \
@@ -19,12 +21,16 @@ doc/DocXul.html: build/DocXul.txt
 
 doc: doc/DocXul.html
 
-interpreter: parser src/Main.hs src/Interpreter.hs
+interpreter: $(GRAMMAR_FILES) src/Main.hs src/Interpreter.hs src/TypeChecker.hs
 	cabal build; \
 	cp dist/build/xul-lang/xul-lang interpreter
 
-run: interpreter
-	./interpreter ./good/big_example.xul +RTS -xc
+run_good: interpreter
+	@for f in good/*.xul; do \
+		echo $$f; \
+		# ./interpreter "$$f" +RTS -xc; \
+		./interpreter "$$f"; \
+	done
 
 # example: all
 #   ./build/TestXul example.xul;

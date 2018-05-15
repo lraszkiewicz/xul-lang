@@ -1,0 +1,32 @@
+void printIntComparison(int a, int b) {
+  string lt = "<", eq = "=";
+  if (a < b) {
+    print(a, lt, b);
+  } else if (a == b) {
+    print(a, eq, b);
+  } else {
+    print(a, ">", b);
+  }
+}
+
+void printIntComparison2(int a, int b) {
+  string lt = "<", eq = "=";
+  if (a < b) {
+    print(a, lt, b);
+  }
+  if (a == b) {
+    print(a, eq, b);
+  }
+  if (a > b) {
+    print(a, ">", b);
+  }
+}
+
+int main() {
+  int b = 3;
+  for (int a in 2 to 4) {
+    printIntComparison(a, b);
+    printIntComparison2(a, b);
+  }
+  return 0;
+}

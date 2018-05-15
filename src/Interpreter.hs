@@ -8,6 +8,8 @@ import Data.Bool
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
 
+import Debug.Trace
+
 import AbsXul
 import ParXul
 
@@ -25,11 +27,13 @@ type State = (VarEnv, Int, Store, Maybe Expr)
 
 type ProgMonad = RWST FunEnv () State IO
 
-interpret :: Program -> String -> IO ()
+interpret :: Program -> String -> IO Integer
 interpret (Program topDefs) arg = do
   let funEnv = foldr
         (\def@(FnDef _ ident _ _) -> Map.insert ident def) makeFunEnv topDefs
-  void $ runRWST (execFun (funEnv ! Ident "main") [EString arg]) funEnv makeState
+  (ELitInt retVal, _, _) <-
+    runRWST (execFun (funEnv ! Ident "main") [EString arg]) funEnv makeState
+  return retVal
 
 makeFunEnv :: FunEnv
 makeFunEnv = Map.fromList [

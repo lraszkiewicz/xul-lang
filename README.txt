@@ -1,15 +1,20 @@
 * Na 14 punktów
-+ 1 (dwa typy)
-+ 2 (arytmetyka, porównania)
-+ 3 (while, if)
-+ 4 (procedury lub funkcje, rekurencja)
-+ 5 (print)
-  6 a) (przez zmienną i wartość)
-+   b) (pętla for)
-+   c) (string i rzutowania)
-    d) (wyrażenia z = ++ += itd)
++ 1 (dwa typy) [good/types.xul]
++ 2 (arytmetyka, porównania) [good/arithmetics.xul, good/comparisons.xul]
++ 3 (while, if) [good/loops.xul, good/cond.xul]
++ 4 (procedury lub funkcje, rekurencja) [good/functions.xul]
++ 5 (print) [good/print.xul]
+  6 a) n/a
++   b) (pętla for) [good/loops.xul]
++   c) (string i rzutowania) [good/string.xul]
+    d) n/a
   Na 17 punktów
-+ 7 (statyczne typowanie)
++ 7 (statyczne typowanie) [bad/types*.xul, bad/shadowing*.xul]
+
+Inne pliki z poprawnymi przykładami:
+- good/big_example.xul: większość funkcji języka, wysłany z deklaracją
+- good/arg.xul: przekazywanie argumentów do programu
+- good/shadowing.xul: przesłanianie identyfikatorów (można skompilować GCC)
 
 Proponowana ocena: 17 punktów, spełnione warunki z treści zadania
 

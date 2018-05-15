@@ -1,0 +1,8 @@
+int main() {
+  string a = "aaa", b = "bbb";
+  print(a + b);
+  string c = intToString(42);
+  int d = stringToInt("42");
+  print(c + "1", d + 1);
+  return 0;
+}

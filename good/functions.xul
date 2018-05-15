@@ -1,0 +1,24 @@
+int factorialRec(int n) {
+  if (n < 2)
+    return 1;
+  else
+    return n * factorialRec(n - 1);
+}
+
+int factorialIter(int n) {
+  int res = 1;
+  for (int i in 2 to n)
+    res = res * i;
+  return res;
+}
+
+void showFactorial(int n) {
+  print(factorialIter(n));
+}
+
+int main() {
+  print(factorialRec(5));
+  print(factorialIter(5));
+  showFactorial(5);
+  return 0;
+}

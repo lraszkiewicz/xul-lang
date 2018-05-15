@@ -1,0 +1,19 @@
+void printIntArithmetics(int a, int b) {
+  print(a, b, a + b, a - b, a * b, a / b, a % b);
+}
+
+int main() {
+  for (int a in 4 to 6) {
+    for (int b in 4 downto 2) {
+      printIntArithmetics(a, b);
+    }
+  }
+  print("aaa" + "" + "bbb");
+  int a = 2;
+  print(a);
+  a++;
+  print(a);
+  a--;
+  print(a);
+  return 0;
+}

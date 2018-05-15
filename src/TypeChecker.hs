@@ -1,3 +1,5 @@
+{-# LANGUAGE ParallelListComp #-}
+
 module TypeChecker where
 
 import Control.Monad.RWS
@@ -148,11 +150,20 @@ checkExpr expr = case expr of
   ELitInt _ -> return Int
   ELitTrue -> return Bool
   ELitFalse -> return Bool
-  EApp ident _ -> do
-    -- TODO check if argument types match
+  EApp ident exprArgs -> do
     funEnv <- ask
-    let (FnDef t _ _ _) = funEnv ! ident
-    return t
+    evalArgs <- forM exprArgs checkExpr
+    let (Ident name) = ident
+    case Map.lookup ident funEnv of
+      Nothing -> error $ "Function `" ++ name ++ "` was not declared."
+      Just (FnDef t _ funArgs _) ->
+        if length evalArgs == length funArgs
+          then do
+            forM_ [(t1, t2) | t1 <- evalArgs | (Arg t2 _) <- funArgs]
+              $ uncurry $ assert expr
+            return t
+          else error $ "Invalid number of arguments passed to `" ++ name
+            ++ "` in:\n" ++ printTree expr
   EString _ -> return Str
   Neg e -> do
     t <- checkExpr e
@@ -177,6 +188,7 @@ checkExpr expr = case expr of
     t2 <- checkExpr e2
     assertMany expr [Int, Str] t1
     assert expr t1 t2
+    return Bool
   EAnd e1 e2 -> checkBoolOp expr e1 e2
   EOr e1 e2 -> checkBoolOp expr e1 e2
   where

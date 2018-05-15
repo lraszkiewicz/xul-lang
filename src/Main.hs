@@ -1,6 +1,7 @@
 import Data.List
 import System.Environment
 import System.IO
+import System.Exit
 
 import AbsXul
 import ErrM
@@ -18,8 +19,9 @@ main = do
   progCode <- hGetContents progFile
   prog <- case pProgram (myLexer progCode) of
     Ok program -> return program
-    Bad err -> do
-      putStr $ "Parsing error: " ++ err ++ "\n"
-      return $ Program []
+    Bad err -> error $ "Parsing error: " ++ err
   checkProg prog
-  interpret prog progArg
+  exitCode <- interpret prog progArg
+  if exitCode == 0
+    then exitSuccess
+    else exitWith $ ExitFailure $ fromInteger exitCode

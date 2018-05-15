@@ -1,0 +1,14 @@
+int factorial(int n) {
+  if (n < 2)
+    return 1;
+  else
+    return n * factorial(n - 1);
+}
+
+int main(string arg) {
+  if (arg != "")
+    print(factorial(stringToInt(arg)));
+  else
+    print(factorial(5));
+  return 0;
+}
