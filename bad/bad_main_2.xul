@@ -1,0 +1,3 @@
+int main(int argc) { // main takes illegal arguments
+  return 0;
+}

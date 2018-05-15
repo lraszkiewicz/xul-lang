@@ -1,0 +1,3 @@
+int main() {
+  // main() is of type int, it has to return a value.
+}

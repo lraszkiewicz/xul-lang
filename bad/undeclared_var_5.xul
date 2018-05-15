@@ -1,0 +1,7 @@
+int main() {
+  {
+    int a = 42;
+  }
+  print(a); // variable defined in a block statement is not visible out of it
+  return 0;
+}

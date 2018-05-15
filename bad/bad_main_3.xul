@@ -1,0 +1,3 @@
+void main() { // main has to be of type int
+  return 0;
+}

@@ -1,0 +1,6 @@
+int main() {
+  for (bool b in false to true) { // for loop counter must be an int
+    print(b);
+  }
+  return 0;
+}

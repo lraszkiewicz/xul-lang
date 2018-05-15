@@ -1,0 +1,8 @@
+int main() {
+  int b = 42;
+  while (b) { // while loop condition must be a bool
+    b--;
+    print(b);
+  }
+  return 0;
+}

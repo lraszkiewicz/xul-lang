@@ -1,0 +1,5 @@
+int main() {
+  string b = intToString(1, 2);
+  // built-in function intToString takes one argument
+  return 0;
+}

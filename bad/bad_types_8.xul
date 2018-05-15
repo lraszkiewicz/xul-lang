@@ -1,0 +1,11 @@
+int g(int a) {
+  return a;
+}
+
+int f(string a) {
+  g(a); // g expects an int
+}
+
+int main() {
+  f("z");
+}

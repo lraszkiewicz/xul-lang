@@ -1,0 +1,8 @@
+void f() {
+  print("a");
+}
+
+int main() {
+  int a = f(); // f does not return a value
+  return 0;
+}

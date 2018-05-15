@@ -1,0 +1,7 @@
+int main() {
+  if (true) {
+    int a = 42;
+  }
+  print(a); // variable defined in if's body is not visible out of it
+  return 0;
+}

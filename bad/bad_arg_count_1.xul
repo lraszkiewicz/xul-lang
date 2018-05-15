@@ -1,0 +1,8 @@
+int f() {
+  return 42;
+}
+
+int main() {
+  print(f(1)); // f takes no arguments
+  return 0;
+}

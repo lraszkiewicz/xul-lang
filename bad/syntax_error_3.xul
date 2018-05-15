@@ -1,0 +1,5 @@
+int main() {
+  int a; // variable declarations must have an initial value
+  a = 5;
+  return 0;
+}

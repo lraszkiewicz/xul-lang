@@ -1,0 +1,8 @@
+int f() {
+  return; // int function trying to not return a value
+}
+
+int main() {
+  f();
+  return 0;
+}

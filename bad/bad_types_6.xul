@@ -1,0 +1,4 @@
+int main() {
+  print(stringToInt(5)); // wrong type passed to build-in function
+  return 0;
+}

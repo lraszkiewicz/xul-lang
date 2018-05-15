@@ -1,0 +1,12 @@
+int f(int a) {
+  return a;
+}
+
+int f(int a) { // redefined f
+  return a + 1;
+}
+
+int main() {
+  f(42);
+  return 0;
+}

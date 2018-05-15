@@ -1,0 +1,7 @@
+// function body must be a block statement
+int f()
+  return 1;
+
+int main() {
+  return 0;
+}

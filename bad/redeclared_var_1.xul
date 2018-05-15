@@ -1,0 +1,9 @@
+int f(int a) {
+  int a = 1; // can't redeclare function argument
+  return a;
+}
+
+int main() {
+  f(42);
+  return 0;
+}

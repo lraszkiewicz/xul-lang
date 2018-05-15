@@ -1,0 +1,8 @@
+void f() {
+  return 1; // void function trying to return a value
+}
+
+int main() {
+  f();
+  return 0;
+}

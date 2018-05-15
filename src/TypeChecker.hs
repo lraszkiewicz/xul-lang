@@ -111,7 +111,7 @@ checkStmt stmt = case stmt of
   Ret expr -> do
     (_, retType) <- get
     t <- checkExpr expr
-    void $ assert stmt t retType
+    void $ assert stmt retType t
   VRet -> do
     (_, retType) <- get
     void $ assert stmt retType Void

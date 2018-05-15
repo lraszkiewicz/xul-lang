@@ -37,6 +37,7 @@ run_bad: interpreter
 		echo "$$f"; \
 		# ./interpreter "$$f" +RTS -xc; \
 		./interpreter "$$f"; \
+		echo; \
 	done
 
 clean:

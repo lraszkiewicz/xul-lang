@@ -16,9 +16,17 @@ void showFactorial(int n) {
   print(factorialIter(n));
 }
 
+void pointerTest(string a) {
+  a = a + "b";
+  return;
+}
+
 int main() {
   print(factorialRec(5));
   print(factorialIter(5));
   showFactorial(5);
+  string a = "a";
+  pointerTest(a);
+  print(a); // function arguments are passed by value, not by reference
   return 0;
 }

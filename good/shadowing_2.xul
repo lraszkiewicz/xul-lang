@@ -1,0 +1,9 @@
+int main() {
+  // A similar code also works and gives the same output in C.
+  for (int i in 1 to 3) {
+    print(i);
+    int i = 42;
+    print(i);
+  }
+  return 0;
+}

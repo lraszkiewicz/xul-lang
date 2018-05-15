@@ -1,0 +1,7 @@
+int main() {
+  int a = 5;
+  while (a--) { // while loop condition must be an expression
+    print(a);
+  }
+  return 0;
+}

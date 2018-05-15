@@ -1,0 +1,7 @@
+int stringToInt(string s) { // redefining a built-in function
+  return 42;
+}
+
+int main() {
+  return 0;
+}

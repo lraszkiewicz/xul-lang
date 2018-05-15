@@ -1,0 +1,10 @@
+int f(int a) {
+  int b = a;
+  return a;
+}
+
+int main() {
+  f(1);
+  print(b); // variable declared in f is not vibisble in main
+  return 0;
+}

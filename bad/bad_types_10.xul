@@ -1,0 +1,8 @@
+int f() {
+  return 42;
+}
+
+int main() {
+  string s = f(); // f returns an int, not a string
+  return 0;
+}
