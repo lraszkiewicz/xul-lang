@@ -24,7 +24,7 @@ interpreter: parser src/Main.hs src/Interpreter.hs
 	cp dist/build/xul-lang/xul-lang interpreter
 
 run: interpreter
-	./interpreter ./good/example.xul +RTS -xc
+	./interpreter ./good/big_example.xul +RTS -xc
 
 # example: all
 #   ./build/TestXul example.xul;

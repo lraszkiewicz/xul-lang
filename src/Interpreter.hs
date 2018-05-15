@@ -6,7 +6,6 @@ import Control.Monad.RWS
 import Data.Maybe
 import Data.Bool
 import Data.Map (Map, (!))
-import Debug.Trace
 import qualified Data.Map as Map
 
 import AbsXul
@@ -29,19 +28,19 @@ type ProgMonad = RWST FunEnv () State IO
 interpret :: Program -> String -> IO ()
 interpret (Program topDefs) arg = do
   let funEnv = foldr
-        (\def@(FnDef _ ident _ _) -> Map.insert ident def) newFunEnv topDefs
-  void $ runRWST (execFun (funEnv ! Ident "main") [EString arg]) funEnv newState
+        (\def@(FnDef _ ident _ _) -> Map.insert ident def) makeFunEnv topDefs
+  void $ runRWST (execFun (funEnv ! Ident "main") [EString arg]) funEnv makeState
 
-newFunEnv :: FunEnv
-newFunEnv = Map.fromList [
+makeFunEnv :: FunEnv
+makeFunEnv = Map.fromList [
     (Ident "intToString",
      FnDef Str (Ident "intToString") [Arg Int (Ident "n")] (Block [])),
     (Ident "stringToInt",
      FnDef Int (Ident "stringToInt") [Arg Str (Ident "s")] (Block []))
   ]
 
-newState :: State
-newState = (Map.empty, 0, Map.empty, Nothing)
+makeState :: State
+makeState = (Map.empty, 0, Map.empty, Nothing)
 
 initVariable :: Item -> State -> State
 initVariable (Init ident expr) (varEnv, newloc, store, ret) =
@@ -61,9 +60,9 @@ execFun (FnDef _ (Ident "stringToInt") _ _) [exprArg] = do
     EString s -> return $ ELitInt $ read s
 execFun (FnDef funType (Ident funName) args block) exprArgs = do
   evalArgs <- forM exprArgs eval
-  oldState@(varEnv, newloc, store, ret) <- get
+  oldState <- get
   let inits = [Init ident expr | (Arg _ ident) <- args | expr <- evalArgs]
-  put $ foldr initVariable newState inits
+  put $ foldr initVariable makeState inits
   execStmt $ BStmt block
   (_, _, _, funRet) <- get
   put oldState
@@ -92,10 +91,9 @@ execForLoop (For t ident valStart ord exprEnd body) = do
     execStmt $ (if ord == OrdUp then Incr else Decr) ident
     execForLoop (For t ident valStart ord exprEnd body)
 
--- In if/else statements and while loops, the body will be wrapped in a block
+-- In conditional statements and loops, the body will be wrapped in a block
 -- statement if it already wasn't. This is to ensure that `if (...) int a = 1;`
 -- will have its own environment, like `if (...) {int a = 1;}` would.
--- Not used for for loops since they create its own env anyway.
 wrapInBlock :: Stmt -> Stmt
 wrapInBlock stmt = case stmt of
   BStmt _ -> stmt
@@ -153,7 +151,8 @@ execStmt stmt = do
       ELitInt valStart <- eval exprStart
       let loopEnv = initVariable (Init ident (ELitInt valStart)) oldState
       put loopEnv
-      execForLoop $ For t ident (ELitInt valStart) ord exprEnd body
+      execForLoop $
+        For t ident (ELitInt valStart) ord exprEnd $ wrapInBlock body
       (_, newNewloc, newStore, newRet) <- get
       put (varEnv, newNewloc, newStore, newRet)
 
