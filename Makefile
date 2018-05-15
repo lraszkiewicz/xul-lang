@@ -23,6 +23,7 @@ doc/DocXul.html: build/DocXul.txt
 doc: doc/DocXul.html
 
 interpreter: $(GRAMMAR_FILES) src/Main.hs src/Interpreter.hs src/TypeChecker.hs
+	cabal configure; \
 	cabal build; \
 	cp dist/build/xul-lang/xul-lang interpreter
 
