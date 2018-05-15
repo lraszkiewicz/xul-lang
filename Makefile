@@ -17,7 +17,8 @@ parser: $(GRAMMAR_FILES)
 
 doc/DocXul.html: build/DocXul.txt
 	mkdir -p doc; \
-	txt2tags -t html -o doc/DocXul.html build/DocXul.txt
+	# txt2tags -t html -o doc/DocXul.html build/DocXul.txt
+	# txt2tags is not available on students
 
 doc: doc/DocXul.html
 
