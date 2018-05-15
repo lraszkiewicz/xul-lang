@@ -167,7 +167,7 @@ checkExpr expr = case expr of
   EString _ -> return Str
   Neg e -> do
     t <- checkExpr e
-    assert expr t Bool
+    assert expr t Int
   Not e -> do
     t <- checkExpr e
     assert expr t Bool

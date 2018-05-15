@@ -40,4 +40,4 @@ run_bad: interpreter
 	done
 
 clean:
-	rm -rf build_bnfc/ doc/ interpreter src/*.o src/*.hi
+	rm -rf build_bnfc/ doc/ dist/ src/*.o src/*.hi interpreter

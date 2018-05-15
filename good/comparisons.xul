@@ -14,5 +14,6 @@ int main() {
   printStringComparisons("aab", "aac");
   printStringComparisons("aaa", "aaa");
   printStringComparisons("aac", "aab");
+  print(true == true, true == false, true != true);
   return 0;
 }
