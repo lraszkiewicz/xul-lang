@@ -1,4 +1,8 @@
+int f(string a) {
+  return stringToInt(a);
+}
+
 int main() {
-  print(stringToInt(5)); // wrong type passed to build-in function
+  f(1); // f expects a string
   return 0;
 }

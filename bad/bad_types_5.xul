@@ -1,8 +1,4 @@
 int main() {
-  int b = 42;
-  while (b) { // while loop condition must be a bool
-    b--;
-    print(b);
-  }
+  print(stringToInt(5)); // wrong type passed to build-in function
   return 0;
 }

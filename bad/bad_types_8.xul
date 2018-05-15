@@ -1,11 +1,8 @@
-int g(int a) {
-  return a;
-}
-
-int f(string a) {
-  g(a); // g expects an int
+void f() {
+  print("a");
 }
 
 int main() {
-  f("z");
+  int a = f(); // f does not return a value
+  return 0;
 }

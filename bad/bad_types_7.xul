@@ -1,8 +1,11 @@
+int g(int a) {
+  return a;
+}
+
 int f(string a) {
-  return stringToInt(a);
+  g(a); // g expects an int
 }
 
 int main() {
-  f(1); // f expects a string
-  return 0;
+  f("z");
 }

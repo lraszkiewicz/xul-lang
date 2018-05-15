@@ -1,8 +1,8 @@
-void f() {
-  print("a");
+int f() {
+  return 42;
 }
 
 int main() {
-  int a = f(); // f does not return a value
+  string s = f(); // f returns an int, not a string
   return 0;
 }

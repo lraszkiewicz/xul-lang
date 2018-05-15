@@ -1,5 +1,5 @@
-void f() {
-  return 1; // void function trying to return a value
+int f() {
+  return; // int function trying to not return a value
 }
 
 int main() {

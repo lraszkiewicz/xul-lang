@@ -1,5 +1,7 @@
 int main() {
-  for (bool b in false to true) { // for loop counter must be an int
+  int b = 42;
+  while (b) { // while loop condition must be a bool
+    b--;
     print(b);
   }
   return 0;
