@@ -4,7 +4,7 @@ GRAMMAR_FILES=src/Xul.cf build_bnfc/AbsXul.hs build_bnfc/LexXul.hs \
 	build_bnfc/ErrM.hs build_bnfc/ParXul.hs build_bnfc/PrintXul.hs \
 	build_bnfc/SkelXul.hs build_bnfc/TestXul.hs
 
-.PHONY: all parser doc run_good run_bad clean
+.PHONY: all parser doc run_good run_bad clean zip
 
 all: parser interpreter
 
@@ -28,17 +28,20 @@ interpreter: $(GRAMMAR_FILES) src/Main.hs src/Interpreter.hs src/TypeChecker.hs
 run_good: interpreter
 	@for f in good/*.xul; do \
 		echo "$$f"; \
-		# ./interpreter "$$f" +RTS -xc; \
 		./interpreter "$$f"; \
 	done
 
 run_bad: interpreter
 	@for f in bad/*.xul; do \
 		echo "$$f"; \
-		# ./interpreter "$$f" +RTS -xc; \
 		./interpreter "$$f"; \
 		echo; \
 	done
 
+zip: clean
+	mkdir -p lukasz_raszkiewicz/; \
+	cp -r bad/ good/ src/ Makefile README lukasz_raszkiewicz; \
+	zip lukasz_raszkiewicz.zip -r lukasz_raszkiewicz/
+
 clean:
-	rm -rf build_bnfc/ doc/ dist/ src/*.o src/*.hi interpreter
+	rm -rf build_bnfc/ doc/ dist/ lukasz_raszkiewicz/ src/*.o src/*.hi interpreter lukasz_raszkiewicz.zip
