@@ -1,0 +1,9 @@
+int f() {
+  int n = 42;
+  // has to return a value
+}
+
+int main() {
+  int a = f();
+  return 0;
+}

@@ -1,0 +1,8 @@
+int f() {
+  return "a"; // int function trying to return a string
+}
+
+int main() {
+  f();
+  return 0;
+}
