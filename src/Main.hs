@@ -20,8 +20,9 @@ main = do
   prog <- case pProgram (myLexer progCode) of
     Ok program -> return program
     Bad err -> error $ "Parsing error: " ++ err
-  checkProg prog
-  exitCode <- interpret prog progArg
+  checkProg prog -- type checking
+  exitCode <- interpret prog progArg -- interpreter
   if exitCode == 0
+    -- exit with the same return value as main() from the program
     then exitSuccess
     else exitWith $ ExitFailure $ fromInteger exitCode

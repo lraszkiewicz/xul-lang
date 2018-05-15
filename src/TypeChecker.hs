@@ -14,7 +14,11 @@ import ParXul
 import PrintXul
 
 type FunEnv = Interpreter.FunEnv
+-- The Bool in Map Ident (Type, Bool) says whether the variable was declared
+-- in the current block (True) or somewhere higher (False).
+-- When entering a block, all values are set to False (function enterBlock).
 type TypeVarEnv = Map Ident (Type, Bool)
+-- The Type in (TypeVarEnv, Type) is the return type of the current function.
 type TypeState = (TypeVarEnv, Type)
 type TypeMonad = RWST FunEnv () TypeState IO
 
@@ -54,9 +58,6 @@ checkDuplicateVariable (Init ident@(Ident name) _) = do
 
 makeState :: Type -> TypeState
 makeState retType = (Map.empty, retType)
-
--- TODO: checkProg, built-in functions, check main,
---       redeclaring function arguments
 
 addFunToEnv :: FunEnv -> TopDef -> IO FunEnv
 addFunToEnv env fun@(FnDef _ ident@(Ident name) _ _) = do
