@@ -2,6 +2,6 @@ int main() {
   int a = 2, b = 3;
   bool c = a < b;
   string d = "abc" + intToString(a);
-  print(a, -a, b, c, !c, d);
+  print(a, b, c, d);
   return 0;
 }

@@ -16,5 +16,7 @@ int main() {
   a--;
   print(a);
   print(-1, (-1) + 2);
+  bool b = true;
+  print(b, !b);
   return 0;
 }

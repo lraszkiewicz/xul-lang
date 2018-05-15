@@ -183,10 +183,12 @@ checkExpr expr = case expr of
     case op of
       Plus -> assertMany expr [Int, Str] t1
       Minus -> assert expr t1 Int
-  ERel e1 _ e2 -> do
+  ERel e1 op e2 -> do
     t1 <- checkExpr e1
     t2 <- checkExpr e2
-    assertMany expr [Int, Str] t1
+    if op == EQU || op == NE
+      then assertMany expr [Int, Str, Bool] t1
+      else assertMany expr [Int, Str] t1
     assert expr t1 t2
     return Bool
   EAnd e1 e2 -> checkBoolOp expr e1 e2
