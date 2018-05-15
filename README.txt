@@ -16,12 +16,15 @@ Inne pliki z poprawnymi przykładami:
 - good/arg.xul: przekazywanie argumentów do programu
 - good/shadowing.xul: przesłanianie identyfikatorów (można skompilować GCC)
 
+`make run_good` i `make run_bad` uruchamiają interpreter na odpowiednio
+wszystkich poprawnych lub niepoprawnych przykładach.
+
 Proponowana ocena: 17 punktów, spełnione warunki z treści zadania
 
-# Zmiany: W poniższej specyfikacji nie doszło do żadnych istotnych zmian odkąd
-# została wysłana do oceny miesiąc temu. Został jedynie doprecyzowany sposób
-# przekazywania argumentów do programu.
-# Plik Xul.cf z gramatyką w ogóle nie został zmieniony.
+--- Zmiany: W poniższej specyfikacji nie doszło do żadnych istotnych zmian odkąd
+została wysłana do oceny miesiąc temu. Został jedynie doprecyzowany sposób
+przekazywania argumentów do programu.
+Plik Xul.cf z gramatyką w ogóle nie został zmieniony.
 
 Język Xul to statycznie typowany język, który bazuje na Latte
 i pożycza z niego większość podstawowych cech.

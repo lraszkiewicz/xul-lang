@@ -1,5 +1,6 @@
 interpreter
-build/
+build_bnfc/
+build_ghc/
 doc/
 other/
 
