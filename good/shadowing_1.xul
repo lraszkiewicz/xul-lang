@@ -1,4 +1,4 @@
-// This code can be compiles with `gcc -x c shadowing.xul`.
+// This code can be compiled with `gcc -x c shadowing.xul`.
 // The compiled C program and Xul interpreter will give exactly the same output.
 
 #include <stdio.h>

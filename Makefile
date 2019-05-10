@@ -16,6 +16,13 @@ build_bnfc/%.hs: src/Xul.cf
 
 parser: $(GRAMMAR_FILES)
 
+parser_for_stack: src/Xul.cf
+	mkdir -p build_bnfc_stack; \
+	cd build_bnfc_stack; \
+	bnfc -m -haskell ../src/Xul.cf; \
+	make; \
+	rm *.hi *.o *.txt *.x *.y Makefile TestXul.hs TestXul
+
 doc/DocXul.html: build_bnfc/DocXul.txt
 	mkdir -p doc; \
 	txt2tags -t html -o doc/DocXul.html build_bnfc/DocXul.txt
@@ -44,4 +51,4 @@ zip: clean
 	zip lukasz_raszkiewicz.zip -r lukasz_raszkiewicz/
 
 clean:
-	rm -rf build_bnfc/ doc/ dist/ lukasz_raszkiewicz/ src/*.o src/*.hi interpreter lukasz_raszkiewicz.zip
+	rm -rf build_bnfc/ build_bnfc_stack/ doc/ dist/ lukasz_raszkiewicz/ src/*.o src/*.hi interpreter lukasz_raszkiewicz.zip

@@ -13,6 +13,16 @@ import Debug.Trace
 import AbsXul
 import ParXul
 
+-- TODO:
+-- * runtime errors:
+--   * divide by 0
+--   * non-void function not returning a value
+--   * stringToInt not parsing
+--   * parser error in Main?
+-- * read-only for loop counter
+-- * check if point 8 from scoring is done correctly
+-- * maybe change the RWST monad to something else
+
 type FunEnv = Map Ident TopDef
 
 type VarEnv = Map Ident Int

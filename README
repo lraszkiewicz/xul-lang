@@ -1,36 +1,32 @@
-* Na 14 punktów
-+ 1 (dwa typy) [good/types.xul]
-+ 2 (arytmetyka, porównania) [good/arithmetics.xul, good/comparisons.xul]
-+ 3 (while, if) [good/loops.xul, good/cond.xul]
-+ 4 (procedury lub funkcje, rekurencja) [good/functions.xul]
-+ 5 (print) [good/print.xul]
-  6 a) n/a
-+   b) (pętla for) [good/loops.xul]
-+   c) (string i rzutowania) [good/string.xul]
-    d) n/a
-  Na 17 punktów
-+ 7 (statyczne typowanie) [większość programów w bad/]
-
-Inne pliki z poprawnymi przykładami:
-- good/big_example.xul: większość funkcji języka, wysłany z deklaracją
-- good/arg.xul: przekazywanie argumentów do programu
-- good/shadowing_*.xul: przesłanianie identyfikatorów
+Na 15 punktów:
++ 1. trzy typy [good/types.xul, good/string.xul]
++ 2. literały, arytmetyka, porównania
+     [good/arithmetics.xul, good/comparisons.xul]
++ 3. zmienne, operacja przypisania [good/types.xul]
++ 4. print [good/print.xul]
++ 5. while, if [good/loops.xul, good/cond.xul]
++ 6. funkcje bez zagnieżdżania, rekurencja [good/functions.xul]
+  7. a) n/a
++    b) TODO: zmienne read-only, pętla for [good/loops.xul]
+Na 20 punktów:
++ 8. przesłanianie identyfikatorów ze statycznym ich wiązaniem
+     [good/shadowing_*.xul]
++ 9. TODO: obsługa błędów wykonania
++ 10. funkcje [good/functions.xul]
+Dodatkowe:
++ 4 pkt - statyczne typowanie [większość programów w bad/]
++ nieprzewidziane w punktacji - przekazywanie argumentu do programu
+  [good/arg.xul]
 
 `make run_good` i `make run_bad` uruchamiają interpreter na odpowiednio
 wszystkich poprawnych lub niepoprawnych przykładach.
 
---- Zmiany: W poniższej specyfikacji nie doszło do żadnych istotnych zmian odkąd
-została wysłana do oceny miesiąc temu. Został jedynie doprecyzowany sposób
-przekazywania argumentów do programu.
-Plik Xul.cf z gramatyką w ogóle nie został zmieniony.
-
 Język Xul to statycznie typowany język, który bazuje na Latte
 i pożycza z niego większość podstawowych cech.
-Gramatyka w formacie BNFC znajduje się w dołączonym pliku Xul.cf,
-lub skompilowana do HTML w DocXul.html.
-Przykładowy działający program jest w pliku example.xul,
+Gramatyka w formacie BNFC, również bazująca na Latte,
+znajduje się w dołączonym pliku Xul.cf, lub skompilowana do HTML w DocXul.html.
+Przykładowy działający program jest w pliku good/big_example.xul,
 powinien wyczerpywać wszystkie potencjalnie nieoczywiste konstrukcje.
-W pliku example.out jest przewidywane wyjście tego programu.
 
 Podobnie jak w Latte, program jest listą definicji funkcji o unikalnych nazwach,
 które muszą albo mieć typ void, albo zwrócić wartość za pomocą return.
