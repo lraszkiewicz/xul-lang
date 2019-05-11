@@ -6,6 +6,7 @@ build_ghc/
 doc/
 lukasz_raszkiewicz/
 other/
+.vscode/
 
 dist
 dist-*

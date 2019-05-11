@@ -7,7 +7,8 @@ Na 15 punktów:
 + 5. while, if [good/loops.xul, good/cond.xul]
 + 6. funkcje bez zagnieżdżania, rekurencja [good/functions.xul]
   7. a) n/a
-+    b) TODO: zmienne read-only, pętla for [good/loops.xul]
++    b) zmienne read-only jako licznik pętli for
+        [bad/read_only.xul, good/loops.xul]
 Na 20 punktów:
 + 8. przesłanianie identyfikatorów ze statycznym ich wiązaniem
      [good/shadowing_*.xul]

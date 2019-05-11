@@ -14,10 +14,20 @@ import ParXul
 import PrintXul
 
 type FunEnv = Interpreter.FunEnv
--- The Bool in Map Ident (Type, Bool) says whether the variable was declared
--- in the current block (True) or somewhere higher (False).
--- When entering a block, all values are set to False (function enterBlock).
-type TypeVarEnv = Map Ident (Type, Bool)
+-- TypeTraits represents information about the type and traits of a variable,
+-- and TypeVarEnv stores that information for each variable.
+-- InCurrentBlock says whether the variable was declared
+-- in the current block or somewhere higher. When entering a block,
+-- all values are set to HigherBlock (function enterBlock).
+data InCurrentBlock
+  = CurrentBlock
+  | HigherBlock
+-- ReadOnly is used for `for` loop counters, everything else is Writable.
+data IsReadOnly
+  = ReadOnly
+  | Writable
+type TypeTraits = (Type, InCurrentBlock, IsReadOnly)
+type TypeVarEnv = Map Ident TypeTraits
 -- The Type in (TypeVarEnv, Type) is the return type of the current function.
 type TypeState = (TypeVarEnv, Type)
 type TypeMonad = RWST FunEnv () TypeState IO
@@ -25,35 +35,48 @@ type TypeMonad = RWST FunEnv () TypeState IO
 assert :: Print a => a -> Type -> Type -> TypeMonad Type
 assert e t1 t2 = if t1 == t2
   then return t1
-  else error $ "Type " ++ show t1 ++ " does not match type " ++ show t2
-               ++ " in:\n" ++ printTree e
+  else errorWithoutStackTrace $
+    "Type " ++ show t1 ++ " does not match type " ++ show t2 ++ " in:\n"
+    ++ printTree e
 
 assertMany :: Print a => a -> [Type] -> Type -> TypeMonad Type
 assertMany e ts t = if t `elem` ts
   then return t
-  else error $ "Type " ++ show t ++ " is not one of " ++ show ts
-               ++ " in:\n" ++ printTree e
+  else errorWithoutStackTrace $
+    "Type " ++ show t ++ " is not one of " ++ show ts ++ " in:\n" ++ printTree e
+
+assertWritable :: Ident -> TypeMonad ()
+assertWritable ident@(Ident name) = do
+  (varEnv, _) <- get
+  case Map.lookup ident varEnv of
+    Just (_, _, Writable) -> return ()
+    Just (_, _, ReadOnly) ->
+      errorWithoutStackTrace $ "Variable `" ++ name ++ "` is read-only."
+    _ -> return ()
 
 getVarType :: Ident -> TypeMonad Type
 getVarType ident@(Ident name) = do
   (varEnv, _) <- get
   if Map.member ident varEnv
-    then let (varType, _) = varEnv ! ident in return varType
-    else error $ "Variable `" ++ name ++ "` was not declared in this scope."
+    then let (varType, _, _) = varEnv ! ident in return varType
+    else errorWithoutStackTrace $
+      "Variable `" ++ name ++ "` was not declared in this scope."
 
 enterBlock :: TypeState -> TypeState
-enterBlock (varEnv, retType) = (Map.map (\(t, b) -> (t, False)) varEnv, retType)
+enterBlock (varEnv, retType) =
+  (Map.map (\(t, _, w) -> (t, HigherBlock, w)) varEnv, retType)
 
-addVariable :: Arg -> TypeMonad ()
-addVariable (Arg declType ident) = do
+addVariable :: IsReadOnly -> Arg -> TypeMonad ()
+addVariable isRO (Arg declType ident) = do
   (varEnv, retType) <- get
-  put (Map.insert ident (declType, True) varEnv, retType)
+  put (Map.insert ident (declType, CurrentBlock, isRO) varEnv, retType)
 
 checkDuplicateVariable :: Item -> TypeMonad ()
 checkDuplicateVariable (Init ident@(Ident name) _) = do
   (varEnv, _) <- get
   case Map.lookup ident varEnv of
-    Just (_, True) -> error $ "Redeclaration of variable `" ++ name ++ "`."
+    Just (_, CurrentBlock, _) ->
+      errorWithoutStackTrace $ "Redeclaration of variable `" ++ name ++ "`."
     _ -> return ()
 
 makeState :: Type -> TypeState
@@ -62,7 +85,7 @@ makeState retType = (Map.empty, retType)
 addFunToEnv :: FunEnv -> TopDef -> IO FunEnv
 addFunToEnv env fun@(FnDef _ ident@(Ident name) _ _) = do
   when (Map.member ident env) $
-    error $ "Redeclaration of function `" ++ name ++ "`."
+    errorWithoutStackTrace $ "Redeclaration of function `" ++ name ++ "`."
   return $ Map.insert ident fun env
 
 checkProg :: Program -> IO ()
@@ -74,16 +97,17 @@ checkProg (Program topDefs) = do
 
 checkMain :: FunEnv -> IO ()
 checkMain env = case Map.lookup (Ident "main") env of
-  Nothing -> error "Function `main` not defined."
+  Nothing -> errorWithoutStackTrace "Function `main` not defined."
   Just fnDef -> case fnDef of
     FnDef Int _ [] _ -> return ()
     FnDef Int _ [Arg Str _] _ -> return ()
-    FnDef Int _ _ _ -> error "Function `main` takes illegal arguments."
-    FnDef{} -> error "Function `main` is not of type `int`."
+    FnDef Int _ _ _ ->
+      errorWithoutStackTrace "Function `main` takes illegal arguments."
+    FnDef{} -> errorWithoutStackTrace "Function `main` is not of type `int`."
 
 checkFun :: TopDef -> TypeMonad ()
 checkFun (FnDef funType _ args (Block stmts)) = do
-  forM_ args addVariable
+  forM_ args $ addVariable Writable
   forM_ stmts checkStmt
 
 checkStmt :: Stmt -> TypeMonad ()
@@ -98,16 +122,19 @@ checkStmt stmt = case stmt of
     types <- forM [e | (Init _ e) <- items] checkExpr
     forM_ types $ assert stmt t
     forM_ items checkDuplicateVariable
-    forM_ [Arg t ident | (Init ident _) <- items] addVariable
+    forM_ [Arg t ident | (Init ident _) <- items] $ addVariable Writable
   Ass ident expr -> do
     varType <- getVarType ident
     exprType <- checkExpr expr
+    assertWritable ident
     void $ assert stmt varType exprType
   Incr ident -> do
     t <- getVarType ident
+    assertWritable ident
     void $ assert stmt t Int
   Decr ident -> do
     t <- getVarType ident
+    assertWritable ident
     void $ assert stmt t Int
   Ret expr -> do
     (_, retType) <- get
@@ -134,7 +161,7 @@ checkStmt stmt = case stmt of
     assert stmt t1 Int
     assert stmt t2 Int
     oldState <- get
-    addVariable $ Arg t ident
+    addVariable ReadOnly $ Arg t ident
     checkStmt $ Interpreter.wrapInBlock body
     put oldState
   where
@@ -156,15 +183,17 @@ checkExpr expr = case expr of
     evalArgs <- forM exprArgs checkExpr
     let (Ident name) = ident
     case Map.lookup ident funEnv of
-      Nothing -> error $ "Function `" ++ name ++ "` was not declared."
+      Nothing ->
+        errorWithoutStackTrace $ "Function `" ++ name ++ "` was not declared."
       Just (FnDef t _ funArgs _) ->
         if length evalArgs == length funArgs
           then do
             forM_ [(t1, t2) | t1 <- evalArgs | (Arg t2 _) <- funArgs]
               $ uncurry $ assert expr
             return t
-          else error $ "Invalid number of arguments passed to `" ++ name
-            ++ "` in:\n" ++ printTree expr
+          else errorWithoutStackTrace $
+            "Invalid number of arguments passed to `" ++ name ++ "` in:\n"
+            ++ printTree expr
   EString _ -> return Str
   Neg e -> do
     t <- checkExpr e

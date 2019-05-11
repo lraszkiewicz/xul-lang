@@ -19,7 +19,7 @@ main = do
   progCode <- hGetContents progFile
   prog <- case pProgram (myLexer progCode) of
     Ok program -> return program
-    Bad err -> error $ "Parsing error: " ++ err
+    Bad err -> errorWithoutStackTrace $ "Parsing error: " ++ err
   checkProg prog -- type checking
   exitCode <- interpret prog progArg -- interpreter
   if exitCode == 0

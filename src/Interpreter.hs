@@ -83,9 +83,9 @@ execFun (FnDef funType (Ident funName) args block) exprArgs = do
   case funRet of
     Just retVal -> return retVal
     Nothing -> if funType == Void
-               then return ELitTrue
-               else error $ "Non-void function `" ++ funName ++
-                            "` did not return a value."
+      then return ELitTrue
+      else errorWithoutStackTrace $
+        "Non-void function `" ++ funName ++ "` did not return a value."
 
 valToString :: Expr -> String
 valToString val = case val of
@@ -148,9 +148,8 @@ execStmt stmt = do
       when (val == ELitTrue) $ execStmt $ wrapInBlock body
     CondElse expr bodyIf bodyElse -> do
       val <- eval expr
-      execStmt $ if val == ELitTrue
-                 then wrapInBlock bodyIf
-                 else wrapInBlock bodyElse
+      execStmt $
+        if val == ELitTrue then wrapInBlock bodyIf else wrapInBlock bodyElse
     loop@(While expr body) -> do
       val <- eval expr
       when (val == ELitTrue) $ do
