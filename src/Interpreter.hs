@@ -7,6 +7,7 @@ import Data.Maybe
 import Data.Bool
 import Data.Map (Map, (!))
 import qualified Data.Map as Map
+import Text.Read (readMaybe)
 
 import Debug.Trace
 
@@ -14,14 +15,9 @@ import AbsXul
 import ParXul
 
 -- TODO:
--- * runtime errors:
---   * divide by 0
---   * non-void function not returning a value
---   * stringToInt not parsing
---   * parser error in Main?
--- * read-only for loop counter
 -- * check if point 8 from scoring is done correctly
 -- * maybe change the RWST monad to something else
+-- * change return type of eval
 
 type FunEnv = Map Ident TopDef
 
@@ -71,7 +67,10 @@ execFun (FnDef _ (Ident "intToString") _ _) [exprArg] = do
 execFun (FnDef _ (Ident "stringToInt") _ _) [exprArg] = do
   evalArg <- eval exprArg
   case evalArg of
-    EString s -> return $ ELitInt $ read s
+    EString s -> case readMaybe s of
+      Just x -> return $ ELitInt x
+      Nothing -> errorWithoutStackTrace $
+        show s ++ " cannot be parsed as an integer."
 execFun (FnDef funType (Ident funName) args block) exprArgs = do
   evalArgs <- forM exprArgs eval
   oldState <- get
@@ -194,6 +193,7 @@ eval e = case e of
     e4 <- eval e2
     case (e3, op, e4) of
       (ELitInt n1, Times, ELitInt n2) -> return $ ELitInt $ n1 * n2
+      (_, _, ELitInt 0) -> errorWithoutStackTrace "Division by 0."
       (ELitInt n1, Div, ELitInt n2) -> return $ ELitInt $ div n1 n2
       (ELitInt n1, Mod, ELitInt n2) -> return $ ELitInt $ mod n1 n2
   EAdd e1 op e2 -> do

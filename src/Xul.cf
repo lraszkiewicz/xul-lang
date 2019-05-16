@@ -43,9 +43,6 @@ Int.       Type ::= "int" ;
 Bool.      Type ::= "bool" ;
 Void.      Type ::= "void" ;
 Str.       Type ::= "string" ;
-internal Fun. Type ::= Type "(" [Type] ")" ;
-
-separator Type "," ;
 
 -- Expressions ---------------------------------------------
 

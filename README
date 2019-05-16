@@ -1,26 +1,34 @@
-Na 15 punktów:
-+ 1. trzy typy [good/types.xul, good/string.xul]
-+ 2. literały, arytmetyka, porównania
-     [good/arithmetics.xul, good/comparisons.xul]
-+ 3. zmienne, operacja przypisania [good/types.xul]
-+ 4. print [good/print.xul]
-+ 5. while, if [good/loops.xul, good/cond.xul]
-+ 6. funkcje bez zagnieżdżania, rekurencja [good/functions.xul]
-  7. a) n/a
-+    b) zmienne read-only jako licznik pętli for
-        [bad/read_only.xul, good/loops.xul]
-Na 20 punktów:
-+ 8. przesłanianie identyfikatorów ze statycznym ich wiązaniem
-     [good/shadowing_*.xul]
-+ 9. TODO: obsługa błędów wykonania
-+ 10. funkcje [good/functions.xul]
-Dodatkowe:
-+ 4 pkt - statyczne typowanie [większość programów w bad/]
-+ nieprzewidziane w punktacji - przekazywanie argumentu do programu
-  [good/arg.xul]
+// Łukasz Raszkiewicz 371594
+
+Język Xul jest językiem imperatywnym, którego gramatyka bazuje na gramatyce
+języka Latte. Poniżej zamieszczam listę zaimplementowanych funkcji zgodnie
+z punktacją z treści zadania wraz z listą przykładowych programów pokazujących
+działanie danej funkcji. Pod tą listą znajduje się szczegółowy opis funkcji
+języka Xul.
 
 `make run_good` i `make run_bad` uruchamiają interpreter na odpowiednio
 wszystkich poprawnych lub niepoprawnych przykładach.
+
+Na 15 punktów:
+1. trzy typy [good/types.xul, good/string.xul]
+2. literały, arytmetyka, porównania [good/arithmetics.xul, good/comparisons.xul]
+3. zmienne, operacja przypisania [good/types.xul]
+4. print [good/print.xul]
+5. while, if [good/loops.xul, good/cond.xul]
+6. funkcje bez zagnieżdżania, rekurencja [good/functions.xul]
+7. a) n/a
+   b) zmienne read-only jako licznik pętli for
+      [bad/read_only.xul, good/loops.xul]
+Na 20 punktów:
+8. przesłanianie identyfikatorów ze statycznym ich wiązaniem
+   [good/shadowing_*.xul]
+9. obsługa błędów wykonania [bad/runtime_error_*.xul]
+10. funkcje [good/functions.xul]
+Dodatkowe:
+* 4 pkt - statyczne typowanie [większość programów w bad/]
+* nieprzewidziane w punktacji - przekazywanie argumentu do programu
+  [good/arg.xul]
+
 
 Język Xul to statycznie typowany język, który bazuje na Latte
 i pożycza z niego większość podstawowych cech.
@@ -28,6 +36,8 @@ Gramatyka w formacie BNFC, również bazująca na Latte,
 znajduje się w dołączonym pliku Xul.cf, lub skompilowana do HTML w DocXul.html.
 Przykładowy działający program jest w pliku good/big_example.xul,
 powinien wyczerpywać wszystkie potencjalnie nieoczywiste konstrukcje.
+Gramatyka zawiera jeden "standardowy" konflikt shift/reduce, również pochodzący
+z gramatyki Latte, biorący się z możliwości użycia if(){} lub if(){}else{}.
 
 Podobnie jak w Latte, program jest listą definicji funkcji o unikalnych nazwach,
 które muszą albo mieć typ void, albo zwrócić wartość za pomocą return.
@@ -78,6 +88,7 @@ Pętla for jest w stylu mieszającym C/Python/Pascal, przykładowo
   for (int a in b to c) {/* ... */}
 wykona ciało pętli dla każdej wartości a w zbiorze {b, b+1, ..., c-1, c}.
 Analogicznie można zrobić downto dla warotści {b, b-1, ..., c+1, c}.
+Licznik pętli for jest tylko do odczytu.
 
 Wbudowana instrukcja print przyjmuje dowolną liczbę argumentów
 dowolnych (potencjalnie różnych) typów i wypisuje je oddzielone spacjami,
@@ -90,4 +101,4 @@ Istnieją wbudowane funkcje:
   string intToString(int)
   int stringToInt(string)
 gdzie wywołanie stringToInt z argumentem niebędącym tekstową reprezentacją
-liczby powoduje zakończenie programu nieokreślonym błędem.
+liczby powoduje zakończenie programu błędem wykonania.

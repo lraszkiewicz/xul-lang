@@ -2,7 +2,7 @@ int main() {
   for (int a in 1 to 5) {
     print(a);
     int a = 5;
-    // the for loop counter is read-only, but the a declared here is not
+    // the for loop counter is read-only, but the `a` declared here is not
     a = 6;
     print(a);
   }
