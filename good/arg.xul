@@ -5,6 +5,8 @@ int factorial(int n) {
     return n * factorial(n - 1);
 }
 
+// ./interpreter good/arg.xul --arg=10
+
 int main(string arg) {
   if (arg != "")
     print(factorial(stringToInt(arg)));

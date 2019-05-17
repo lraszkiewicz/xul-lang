@@ -10,6 +10,7 @@ int main() {
       break;
     }
   }
+  print();
   for (int i in 0 to 11) {
     if (i % 2 == 0) {
       continue;
@@ -17,6 +18,18 @@ int main() {
     print(i);
     if (i == 11) {
       break;
+    }
+  }
+  print();
+  for (int i in 1 to 3) {
+    for (int j in 1 to 4) {
+      if (j == 2) {
+        continue;
+      }
+      print(i, j);
+      if (j == 3) {
+        break;
+      }
     }
   }
   return 0;

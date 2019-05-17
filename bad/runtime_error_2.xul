@@ -1,4 +1,5 @@
 int main() {
-  print(42 / 0); // division by zero
+  int x = 0;
+  print(42 / x); // division by zero
   return 0;
 }

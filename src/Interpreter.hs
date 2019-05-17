@@ -14,11 +14,6 @@ import Debug.Trace
 import AbsXul
 import ParXul
 
--- TODO:
--- * check if point 8 from scoring is done correctly
--- * maybe change the RWST monad to something else
--- * change return type of eval
-
 data Value
   = ValInt Integer
   | ValFalse
@@ -36,6 +31,7 @@ data LoopState
   = LoopNone
   | LoopBreak
   | LoopContinue
+  deriving Eq
 -- State: (varEnv, newloc, store, ret, loopState)
 --- varEnv - mapping of variables to a place in Store
 --- newloc - next available memory location
@@ -118,16 +114,6 @@ wrapInBlock stmt = case stmt of
   BStmt _ -> stmt
   _ -> BStmt $ Block [stmt]
 
-isBreak :: LoopState -> Bool
-isBreak loopState = case loopState of
-  LoopBreak -> True
-  _ -> False
-
-isLoopNone :: LoopState -> Bool
-isLoopNone loopState = case loopState of
-  LoopNone -> True
-  _ -> False
-
 setLoopNone :: ProgMonad ()
 setLoopNone = do
   (varEnv, newloc, store, ret, _) <- get
@@ -143,7 +129,7 @@ execForLoop (For t ident valStart ord exprEnd body) = do
     setLoopNone
     execStmt body
     (_, _, _, _, loopState) <- get
-    when (not $ isBreak loopState) $ do
+    when (loopState /= LoopBreak) $ do
       setLoopNone
       execStmt $ (if ord == OrdUp then Incr else Decr) ident
       execForLoop (For t ident valStart ord exprEnd body)
@@ -151,7 +137,7 @@ execForLoop (For t ident valStart ord exprEnd body) = do
 execStmt :: Stmt -> ProgMonad ()
 execStmt stmt = do
   oldState@(varEnv, newloc, store, ret, loopState) <- get
-  when (isNothing ret && isLoopNone loopState) $ case stmt of
+  when (isNothing ret && loopState == LoopNone) $ case stmt of
     Empty -> return ()
     BStmt (Block stmts) -> do
       forM_ stmts execStmt
@@ -192,7 +178,7 @@ execStmt stmt = do
         execStmt $ wrapInBlock body
         (_, _, _, _, newLoopState) <- get
         setLoopNone
-        when (not $ isBreak newLoopState) $ execStmt loop
+        when (newLoopState /= LoopBreak) $ execStmt loop
     SExp expr -> void $ eval expr
     Print exprs -> do
       vals <- forM exprs eval
