@@ -8,6 +8,7 @@ lukasz_raszkiewicz/
 other/
 .vscode/
 xul-lang.cabal
+work/
 
 dist
 dist-*

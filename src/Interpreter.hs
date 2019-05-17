@@ -23,13 +23,20 @@ type FunEnv = Map Ident TopDef
 
 type VarEnv = Map Ident Int
 type Store = Map Int Expr
--- State: (varEnv, newloc, store, ret)
+data LoopState
+  = LoopNone
+  | LoopBreak
+  | LoopContinue
+-- State: (varEnv, newloc, store, ret, loopState)
 --- varEnv - mapping of variables to a place in Store
 --- newloc - next available memory location
 --- store - mapping of memory locations to values
 --- ret - Just $ return value of the currently executed function
 ---       or Nothing if not yet returned
-type State = (VarEnv, Int, Store, Maybe Expr)
+--- loopState - LoopBreak or LoopContinue when break or continue have been used
+---             in the loop's current iteration, LoopNone when they haven't or
+---             when a loop is not being currently executed
+type State = (VarEnv, Int, Store, Maybe Expr, LoopState)
 
 type ProgMonad = RWST FunEnv () State IO
 
@@ -50,14 +57,15 @@ makeFunEnv = Map.fromList [
   ]
 
 makeState :: State
-makeState = (Map.empty, 0, Map.empty, Nothing)
+makeState = (Map.empty, 0, Map.empty, Nothing, LoopNone)
 
 initVariable :: Item -> State -> State
-initVariable (Init ident expr) (varEnv, newloc, store, ret) =
+initVariable (Init ident expr) (varEnv, newloc, store, ret, loopState) =
   (Map.insert ident newloc varEnv,
    newloc + 1,
    Map.insert newloc expr store,
-   ret)
+   ret,
+   loopState)
 
 execFun :: TopDef -> [Expr] -> ProgMonad Expr
 execFun (FnDef _ (Ident "intToString") _ _) [exprArg] = do
@@ -77,7 +85,7 @@ execFun (FnDef funType (Ident funName) args block) exprArgs = do
   let inits = [Init ident expr | (Arg _ ident) <- args | expr <- evalArgs]
   put $ foldr initVariable makeState inits
   execStmt $ BStmt block
-  (_, _, _, funRet) <- get
+  (_, _, _, funRet, _) <- get
   put oldState
   case funRet of
     Just retVal -> return retVal
@@ -93,17 +101,6 @@ valToString val = case val of
   ELitFalse -> "false"
   EString s -> s
 
--- Assumes that the loop counter was added to varEnv earlier.
-execForLoop :: Stmt -> ProgMonad ()
-execForLoop (For t ident valStart ord exprEnd body) = do
-  ELitInt valCounter <- eval (EVar ident)
-  ELitInt valEnd <- eval exprEnd
-  let compOp = if ord == OrdUp then (<=) else (>=) :: Integer -> Integer -> Bool
-  when (compOp valCounter valEnd) $ do
-    execStmt body
-    execStmt $ (if ord == OrdUp then Incr else Decr) ident
-    execForLoop (For t ident valStart ord exprEnd body)
-
 -- In conditional statements and loops, the body will be wrapped in a block
 -- statement if it already wasn't. This is to ensure that `if (...) int a = 1;`
 -- will have its own environment, like `if (...) {int a = 1;}` would.
@@ -112,15 +109,45 @@ wrapInBlock stmt = case stmt of
   BStmt _ -> stmt
   _ -> BStmt $ Block [stmt]
 
+isBreak :: LoopState -> Bool
+isBreak loopState = case loopState of
+  LoopBreak -> True
+  _ -> False
+
+isLoopNone :: LoopState -> Bool
+isLoopNone loopState = case loopState of
+  LoopNone -> True
+  _ -> False
+
+setLoopNone :: ProgMonad ()
+setLoopNone = do
+  (varEnv, newloc, store, ret, _) <- get
+  put (varEnv, newloc, store, ret, LoopNone)
+
+-- Assumes that the loop counter was added to varEnv earlier.
+execForLoop :: Stmt -> ProgMonad ()
+execForLoop (For t ident valStart ord exprEnd body) = do
+  ELitInt valCounter <- eval (EVar ident)
+  ELitInt valEnd <- eval exprEnd
+  let compOp = if ord == OrdUp then (<=) else (>=) :: Integer -> Integer -> Bool
+  when (compOp valCounter valEnd) $ do
+    setLoopNone
+    execStmt body
+    (_, _, _, _, loopState) <- get
+    when (not $ isBreak loopState) $ do
+      setLoopNone
+      execStmt $ (if ord == OrdUp then Incr else Decr) ident
+      execForLoop (For t ident valStart ord exprEnd body)
+
 execStmt :: Stmt -> ProgMonad ()
 execStmt stmt = do
-  oldState@(varEnv, newloc, store, ret) <- get
-  when (isNothing ret) $ case stmt of
+  oldState@(varEnv, newloc, store, ret, loopState) <- get
+  when (isNothing ret && isLoopNone loopState) $ case stmt of
     Empty -> return ()
     BStmt (Block stmts) -> do
       forM_ stmts execStmt
-      (_, newNewloc, newStore, newRet) <- get
-      put (varEnv, newNewloc, newStore, newRet)
+      (_, newNewloc, newStore, newRet, newLoopState) <- get
+      put (varEnv, newNewloc, newStore, newRet, newLoopState)
     Decl _ vars -> do
       vals <- forM [expr | (Init _ expr) <- vars] eval
       let inits = [Init ident val | (Init ident _) <- vars | val <- vals]
@@ -128,20 +155,20 @@ execStmt stmt = do
     Ass ident expr -> do
       val <- eval expr
       let newStore = Map.insert (varEnv ! ident) val store
-      put (varEnv, newloc, newStore, ret)
+      put (varEnv, newloc, newStore, ret, loopState)
     Incr ident -> do
       let (ELitInt val) = store ! (varEnv ! ident)
       let newStore = Map.insert (varEnv ! ident) (ELitInt $ val + 1) store
-      put (varEnv, newloc, newStore, ret)
+      put (varEnv, newloc, newStore, ret, loopState)
     Decr ident -> do
       let (ELitInt val) = store ! (varEnv ! ident)
       let newStore = Map.insert (varEnv ! ident) (ELitInt $ val - 1) store
-      put (varEnv, newloc, newStore, ret)
+      put (varEnv, newloc, newStore, ret, loopState)
     Ret expr -> do
       val <- eval expr
-      put (varEnv, newloc, store, Just val)
+      put (varEnv, newloc, store, Just val, loopState)
     -- The return value from VRet will be ignored, it just can't be Nothing.
-    VRet -> put (varEnv, newloc, store, Just ELitTrue)
+    VRet -> put (varEnv, newloc, store, Just ELitTrue, loopState)
     Cond expr body -> do
       val <- eval expr
       when (val == ELitTrue) $ execStmt $ wrapInBlock body
@@ -152,8 +179,11 @@ execStmt stmt = do
     loop@(While expr body) -> do
       val <- eval expr
       when (val == ELitTrue) $ do
+        setLoopNone
         execStmt $ wrapInBlock body
-        execStmt loop
+        (_, _, _, _, newLoopState) <- get
+        setLoopNone
+        when (not $ isBreak newLoopState) $ execStmt loop
     SExp expr -> void $ eval expr
     Print exprs -> do
       vals <- forM exprs eval
@@ -165,13 +195,15 @@ execStmt stmt = do
       put loopEnv
       execForLoop $
         For t ident (ELitInt valStart) ord exprEnd $ wrapInBlock body
-      (_, newNewloc, newStore, newRet) <- get
-      put (varEnv, newNewloc, newStore, newRet)
+      (_, newNewloc, newStore, newRet, _) <- get
+      put (varEnv, newNewloc, newStore, newRet, LoopNone)
+    Break -> put (varEnv, newloc, store, ret, LoopBreak)
+    Continue -> put (varEnv, newloc, store, ret, LoopContinue)
 
 eval :: Expr -> ProgMonad Expr
 eval e = case e of
   EVar ident -> do
-    (varEnv, _, store, _) <- get
+    (varEnv, _, store, _, _) <- get
     return $ store ! (varEnv ! ident)
   ELitInt _ -> return e
   ELitTrue -> return e

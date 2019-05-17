@@ -1,0 +1,8 @@
+int main() {
+  int i = 0;
+  while (i < 10) {
+    print(i);
+  }
+  continue; // continue outside of a loop
+  return 0;
+}

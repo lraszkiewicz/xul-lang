@@ -14,11 +14,11 @@ Na 15 punktów:
 2. literały, arytmetyka, porównania [good/arithmetics.xul, good/comparisons.xul]
 3. zmienne, operacja przypisania [good/types.xul]
 4. print [good/print.xul]
-5. while, if [good/loops.xul, good/cond.xul]
+5. while, if [good/loops_*.xul, good/cond.xul]
 6. funkcje bez zagnieżdżania, rekurencja [good/functions.xul]
 7. a) n/a
    b) zmienne read-only jako licznik pętli for
-      [bad/read_only.xul, good/loops.xul]
+      [bad/read_only.xul, good/loops_*.xul]
 Na 20 punktów:
 8. przesłanianie identyfikatorów ze statycznym ich wiązaniem
    [good/shadowing_*.xul]
@@ -26,6 +26,7 @@ Na 20 punktów:
 10. funkcje [good/functions.xul]
 Dodatkowe:
 * 4 pkt - statyczne typowanie [większość programów w bad/]
+* 1 pkt - break i continue [good/loops_2.xul, bad/bad_loops_*.xul]
 * nieprzewidziane w punktacji - przekazywanie argumentu do programu
   [good/arg.xul]
 

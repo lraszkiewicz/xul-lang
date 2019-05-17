@@ -1,0 +1,23 @@
+int main() {
+  int i = 0;
+  while (true) {
+    i++;
+    if (i % 2 == 0) {
+      continue;
+    }
+    print(i);
+    if (i == 11) {
+      break;
+    }
+  }
+  for (int i in 0 to 11) {
+    if (i % 2 == 0) {
+      continue;
+    }
+    print(i);
+    if (i == 11) {
+      break;
+    }
+  }
+  return 0;
+}

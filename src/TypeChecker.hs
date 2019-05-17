@@ -28,8 +28,11 @@ data IsReadOnly
   | Writable
 type TypeTraits = (Type, InCurrentBlock, IsReadOnly)
 type TypeVarEnv = Map Ident TypeTraits
+data IsInLoop
+  = InLoop
+  | OutOfLoop
 -- The Type in (TypeVarEnv, Type) is the return type of the current function.
-type TypeState = (TypeVarEnv, Type)
+type TypeState = (TypeVarEnv, Type, IsInLoop)
 type TypeMonad = RWST FunEnv () TypeState IO
 
 assert :: Print a => a -> Type -> Type -> TypeMonad Type
@@ -47,7 +50,7 @@ assertMany e ts t = if t `elem` ts
 
 assertWritable :: Ident -> TypeMonad ()
 assertWritable ident@(Ident name) = do
-  (varEnv, _) <- get
+  (varEnv, _, _) <- get
   case Map.lookup ident varEnv of
     Just (_, _, Writable) -> return ()
     Just (_, _, ReadOnly) ->
@@ -56,31 +59,34 @@ assertWritable ident@(Ident name) = do
 
 getVarType :: Ident -> TypeMonad Type
 getVarType ident@(Ident name) = do
-  (varEnv, _) <- get
+  (varEnv, _, _) <- get
   if Map.member ident varEnv
     then let (varType, _, _) = varEnv ! ident in return varType
     else errorWithoutStackTrace $
       "Variable `" ++ name ++ "` was not declared in this scope."
 
 enterBlock :: TypeState -> TypeState
-enterBlock (varEnv, retType) =
-  (Map.map (\(t, _, w) -> (t, HigherBlock, w)) varEnv, retType)
+enterBlock (varEnv, retType, isInLoop) =
+  (Map.map (\(t, _, w) -> (t, HigherBlock, w)) varEnv, retType, isInLoop)
 
 addVariable :: IsReadOnly -> Arg -> TypeMonad ()
 addVariable isRO (Arg declType ident) = do
-  (varEnv, retType) <- get
-  put (Map.insert ident (declType, CurrentBlock, isRO) varEnv, retType)
+  (varEnv, retType, isInLoop) <- get
+  put
+    (Map.insert ident (declType, CurrentBlock, isRO) varEnv,
+     retType,
+     isInLoop)
 
 checkDuplicateVariable :: Item -> TypeMonad ()
 checkDuplicateVariable (Init ident@(Ident name) _) = do
-  (varEnv, _) <- get
+  (varEnv, _, _) <- get
   case Map.lookup ident varEnv of
     Just (_, CurrentBlock, _) ->
       errorWithoutStackTrace $ "Redeclaration of variable `" ++ name ++ "`."
     _ -> return ()
 
 makeState :: Type -> TypeState
-makeState retType = (Map.empty, retType)
+makeState retType = (Map.empty, retType, OutOfLoop)
 
 addFunToEnv :: FunEnv -> TopDef -> IO FunEnv
 addFunToEnv env fun@(FnDef _ ident@(Ident name) _ _) = do
@@ -110,6 +116,17 @@ checkFun (FnDef funType _ args (Block stmts)) = do
   forM_ args $ addVariable Writable
   forM_ stmts checkStmt
 
+checkBreakCont :: Stmt -> TypeMonad ()
+checkBreakCont stmt = do
+  (_, _, isInLoop) <- get
+  case isInLoop of
+    OutOfLoop -> errorWithoutStackTrace $ name ++ " used outside of a loop."
+    _ -> return ()
+  where
+    name = case stmt of
+      Break -> "Break"
+      Continue -> "Continue"
+
 checkStmt :: Stmt -> TypeMonad ()
 checkStmt stmt = case stmt of
   Empty -> return ()
@@ -137,11 +154,11 @@ checkStmt stmt = case stmt of
     assertWritable ident
     void $ assert stmt t Int
   Ret expr -> do
-    (_, retType) <- get
+    (_, retType, _) <- get
     t <- checkExpr expr
     void $ assert stmt retType t
   VRet -> do
-    (_, retType) <- get
+    (_, retType, _) <- get
     void $ assert stmt retType Void
   Cond expr body -> checkCondWhile expr body
   CondElse expr body1 body2 -> do
@@ -149,7 +166,11 @@ checkStmt stmt = case stmt of
     assert stmt t Bool
     checkStmt $ Interpreter.wrapInBlock body1
     checkStmt $ Interpreter.wrapInBlock body2
-  While expr body -> checkCondWhile expr body
+  While expr body -> do
+    oldState@(varEnv, retType, isInLoop) <- get
+    put (varEnv, retType, InLoop)
+    checkCondWhile expr body
+    put oldState
   SExp expr -> void $ checkExpr expr
   Print exprs -> do
     types <- forM exprs checkExpr
@@ -160,10 +181,13 @@ checkStmt stmt = case stmt of
     t2 <- checkExpr expr2
     assert stmt t1 Int
     assert stmt t2 Int
-    oldState <- get
+    oldState@(varEnv, retType, isInLoop) <- get
+    put (varEnv, retType, InLoop)
     addVariable ReadOnly $ Arg t ident
     checkStmt $ Interpreter.wrapInBlock body
     put oldState
+  Break -> checkBreakCont stmt
+  Continue -> checkBreakCont stmt
   where
     checkCondWhile expr body = do
       t <- checkExpr expr
